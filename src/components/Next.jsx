@@ -18,14 +18,24 @@ const Next = () => {
 
   const searchWeather = async () => {
     try {
-      const response = await fetch(`${apiurl}${city}&units=metric&cnt=7&appid=${apikey}`);
-
+      const response = await fetch(`${apiurl}${city}&units=metric&cnt=40&appid=${apikey}`);
       if (response.status === 404) {
         setNotFound(true);
         setWeatherData(null);
       } else {
         const data = await response.json();
-        setWeatherData(data);
+        const dailyData = [];
+        const seenDates = new Set();
+  
+        data.list.forEach((entry) => {
+          const date = new Date(entry.dt * 1000).toLocaleDateString();
+          if (!seenDates.has(date)) {
+            seenDates.add(date);
+            dailyData.push(entry);
+          }
+        });
+  
+        setWeatherData({ ...data, list: dailyData.slice(0, 7) }); 
         setNotFound(false);
       }
     } catch (error) {
@@ -33,7 +43,7 @@ const Next = () => {
       setWeatherData(null);
     }
   };
-
+  
   const getWeatherIcon = (weatherArray) => {
     if (weatherArray && weatherArray.length > 0) {
       const weatherMain = weatherArray[0].main;
@@ -85,7 +95,7 @@ const Next = () => {
           </div>
 
           <div className="forecast">
-            <h2>7-Day Forecast</h2>
+            <h2>6-Day Forecast</h2>
             <div className="forecast-items">
               {weatherData.list.slice(1, 8).map((forecast, index) => (
                 <div key={index} className="forecast-item">
